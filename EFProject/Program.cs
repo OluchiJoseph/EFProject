@@ -1,5 +1,9 @@
-﻿using EFProject.Models;
+﻿using System;
+using System.Linq;
+using EFProject.Models;
 using EFProject.Utility;
+using EntityFramework.Exceptions.Common;
+using Microsoft.Data.SqlClient;
 
 namespace EFProject
 {
@@ -7,13 +11,13 @@ namespace EFProject
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
-            //EFCoreInsert();
+            Console.WriteLine("Welcome to your Database!");
+            EFCoreInsert();
             //EFCoreUpdate();
-            EFCoreDelete();
+            //EFCoreDelete();
         }
 
-        static void EFCore()
+        static void EFCoreInsert()
         {
             try
             {
@@ -23,10 +27,12 @@ namespace EFProject
                 agen.AgentId = 1;
                 agen.PhoneNumber = "279-770-9825";
                 agen.Gender = "Male";
-                db.AgentProfile.Add(agen);
+                db.AgentProfiles.Add(agen);
                 var noOfInsertRows = db.SaveChanges();
                 Console.WriteLine($"{noOfInsertRows} row(s) was inserted successfully");
             }
+
+          
 
             catch (Exception ex)
             {
@@ -40,30 +46,64 @@ namespace EFProject
         {
             try
             {
-                var db = new POSAgentsdbContext();
+                var db = new POSAgentsContext();
+                var wantedAgen = db.AgentProfiles.Where(a => a.AgentId == 1).FirstOrDefault();
+                db.AgentProfiles.Remove(wantedAgen);
+                var deletedRow = db.SaveChanges();
+                Console.WriteLine($"{deletedRow} row(s) was deleted successfully");
+            }
+
+            catch (UniqueConstraintException ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.ReadLine();
+            }
+
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
         }
 
-        static void MethodChain()
+        static void EFCoreUpdate()
         {
-            string[] tasks = { "collect", "pay" };
+            try
+            {
+                var db = new POSAgentsContext();
+                var wantedAgen = db.AgentProfiles.Where(a => a.AgentId == 1).FirstOrDefault();
+                wantedAgen.AgentName = "Mark";
+                wantedAgen.PhoneNumber = "209-970-8455";
 
-            var eod = new EndOfDay(tasks.ToList());
+                db.Update(wantedAgen);
+                var updatedRows = db.SaveChanges();
+                Console.WriteLine($"{updatedRows} row(s) was updated successfully");
+            }
 
-            var output = eod
-                .CheckSystem()
-                .AddApproval("Mac")
-                .RemoveTax()
-                .CloseDay();
+            catch (UniqueConstraintException ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.ReadLine();
+            }
 
-
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.ReadLine();
+            }
         }
-    }
+        //static void MethodChain()
+        //{
+        //    string[] tasks = { "collect", "pay" };
 
-    internal class POSAgentsdbContext
-    {
-        public POSAgentsdbContext()
-        {
-        }
+        //    var eod = new EndOfDay(tasks.ToList());
+
+        //    var output = eod
+        //        .CheckSystem()
+        //        .AddApproval("Mac")
+        //        .RemoveTax()
+        //        .CloseDay();
+
+
+
     }
 }
